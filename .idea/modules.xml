@@ -2,7 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/flow_worker.iml" filepath="$PROJECT_DIR$/.idea/flow_worker.iml" />
+      <module fileurl="file://$PROJECT_DIR$/flow_worker/flow_worker.iml" filepath="$PROJECT_DIR$/flow_worker/flow_worker.iml" />
+      <module fileurl="file://$PROJECT_DIR$/flow_worker1.iml" filepath="$PROJECT_DIR$/flow_worker1.iml" />
     </modules>
   </component>
 </project>
