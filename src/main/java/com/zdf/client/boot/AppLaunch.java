@@ -5,18 +5,23 @@ import com.sun.org.slf4j.internal.Logger;
 import com.sun.org.slf4j.internal.LoggerFactory;
 import com.zdf.client.Client.TaskFlower;
 import com.zdf.client.Client.TaskFlowerImpl;
-import com.zdf.client.core.ObserverManager;
-import com.zdf.client.enums.TaskStatus;
 import com.zdf.client.constant.TaskConstant;
+import com.zdf.client.core.ObserverManager;
 import com.zdf.client.core.observers.TimeObserver;
 import com.zdf.client.data.*;
+import com.zdf.client.enums.TaskStatus;
+import com.zdf.client.lock.LockParam;
+import com.zdf.client.lock.RedisLock;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class AppLaunch implements Launch{
     final TaskFlower taskFlower;
@@ -27,6 +32,7 @@ public class AppLaunch implements Launch{
     public Long cycleScheduleConfigTime = 10000L;
     public static int MaxConcurrentRunTimes = 5;
     public static int concurrentRunTimes = MaxConcurrentRunTimes;
+    private static String LOCK_KEY = "lock";
     Map<String, ScheduleConfig> scheduleCfgDic;
     Class<?> larkTaskClass;
     Logger logger = LoggerFactory.getLogger(AppLaunch.class);
@@ -74,12 +80,12 @@ public class AppLaunch implements Launch{
         } catch (InvocationTargetException | IllegalAccessException e) {
             e.printStackTrace();
         }
-        List<AsyncTaskReturn> taskList = taskFlower.getTaskList(larkTaskClass, TaskStatus.PENDING.getStatus(), scheduleCfgDic.get(larkTaskClass.getSimpleName()).getSchedule_limit());
-        if (taskList.size() == 0) {
-            logger.warn("no task to deal!");
+
+        List<AsyncTaskBase> asyncTaskBaseList = getAsyncTaskBases(observerManager);
+        if (asyncTaskBaseList == null || asyncTaskBaseList.size() == 0) {
             return;
         }
-        List<AsyncTaskBase> asyncTaskBaseList = convertModel(taskList);
+
         int size = asyncTaskBaseList.size();
         for (int i = 0; i < size; i++) {
             AsyncTaskBase v = asyncTaskBaseList.get(i);
@@ -107,6 +113,35 @@ public class AppLaunch implements Launch{
                 e.printStackTrace();
             }
         }
+    }
+
+    private List<AsyncTaskBase> getAsyncTaskBases(ObserverManager observerManager) {
+        LockParam lockParam = new LockParam(LOCK_KEY);
+        RedisLock redisLock = new RedisLock(lockParam);
+        List<AsyncTaskReturn> taskList = null;
+        try {
+            if (redisLock.lock()) {
+                taskList = taskFlower.getTaskList(larkTaskClass, TaskStatus.PENDING.getStatus(), scheduleCfgDic.get(larkTaskClass.getSimpleName()).getSchedule_limit());
+                if (taskList == null || taskList.size() == 0) {
+                    logger.warn("no task to deal!");
+                    return null;
+                }
+                List<AsyncTaskBase> asyncTaskBaseList = convertModel(taskList);
+                try {
+                    observerManager.wakeupObserver(ObserverType.onObtain, asyncTaskBaseList);
+                    return asyncTaskBaseList;
+                } catch (InvocationTargetException | IllegalAccessException e) {
+                    e.printStackTrace();
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        finally {
+            redisLock.unlock();
+        }
+
+        return null;
     }
 
     private void loadCfg() {

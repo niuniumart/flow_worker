@@ -1,19 +1,17 @@
 package com.zdf.client.core.observers;
 
 import com.alibaba.fastjson.JSON;
-import com.sun.org.slf4j.internal.Logger;
-import com.sun.org.slf4j.internal.LoggerFactory;
 import com.zdf.client.Client.TaskFlower;
 import com.zdf.client.Client.TaskFlowerImpl;
-import com.zdf.client.constant.UserConfig;
-import com.zdf.client.data.AsyncTaskSetRequest;
-import com.zdf.client.enums.TaskStatus;
 import com.zdf.client.boot.AppLaunch;
+import com.zdf.client.constant.UserConfig;
 import com.zdf.client.core.AnnType;
 import com.zdf.client.core.ObserverFunction;
 import com.zdf.client.data.AsyncTaskBase;
+import com.zdf.client.data.AsyncTaskSetRequest;
 import com.zdf.client.data.ScheduleConfig;
 import com.zdf.client.data.ScheduleLog;
+import com.zdf.client.enums.TaskStatus;
 
 import java.util.List;
 import java.util.UUID;
@@ -24,13 +22,15 @@ public class TimeObserver implements ObserverFunction{
 
     @Override
     @AnnType(observerType = AppLaunch.ObserverType.onObtain)
-    public void onObtain(AsyncTaskBase asyncTaskReturn) {
-
+    public void onObtain(List<AsyncTaskBase> asyncTaskBaseList) {
+        System.out.println("改变任务状态");
+        for (AsyncTaskBase asyncTaskBase : asyncTaskBaseList) {
+            setTaskNow(modifyStatus(asyncTaskBase, TaskStatus.EXECUTING));
+        }
     }
     @Override
     @AnnType(observerType = AppLaunch.ObserverType.onExecute)
     public void onExecute(AsyncTaskBase asyncTaskReturn) {
-        setTaskNow(modifyStatus(asyncTaskReturn, TaskStatus.EXECUTING));
         this.beginTime = System.currentTimeMillis();
         System.out.println(asyncTaskReturn.getTask_type() + "开始执行。");
     }

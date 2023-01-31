@@ -7,7 +7,7 @@ import java.util.List;
 
 public interface ObserverFunction {
     void onBoot();
-    void onObtain(AsyncTaskBase asyncTaskReturn);
+    void onObtain(List<AsyncTaskBase> asyncTaskBaseList);
     void onExecute(AsyncTaskBase asyncTaskReturn);
     void onFinish(AsyncTaskBase asyncTaskReturn);
     void onStop(AsyncTaskBase asyncTaskReturn);
