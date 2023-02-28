@@ -17,7 +17,7 @@ public class AsyncTaskSetRequest {
     private int max_retry_num; //NOT NULL DEFAULT '0' COMMENT '最大能重试几次',
     private int max_retry_interval;
     public AsyncTaskSetRequest(Long task_id) {
-        this(task_id, "", -1, "", "", -1, -1, -1);
+        this(task_id, "", 0, "", "", 0, 0, 0);
     }
 
 

@@ -10,8 +10,6 @@ import com.zdf.client.core.ObserverManager;
 import com.zdf.client.core.observers.TimeObserver;
 import com.zdf.client.data.*;
 import com.zdf.client.enums.TaskStatus;
-import com.zdf.client.lock.LockParam;
-import com.zdf.client.lock.RedisLock;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -52,23 +50,17 @@ public class AppLaunch implements Launch{
         init();
     }
 
-    public int getScheduleLimit() {
-        return scheduleLimit;
-    }
-
-    public void setScheduleLimit(int scheduleLimit) {
-        this.scheduleLimit = scheduleLimit;
-    }
-
     @Override
     public int start() {
         ScheduleConfig scheduleConfig = scheduleCfgDic.get(this.taskType);
         // take the task at fixed rate
         intervalTime = scheduleConfig.getSchedule_interval() == 0 ? TaskConstant.DEFAULT_TIME_INTERVAL * 1000L : scheduleConfig.getSchedule_interval() * 1000L;
-        // 前后波动500ms
-        int step = (int) (Math.random() * 500 + 1);
-        intervalTime += step;
-        threadPoolExecutor.scheduleAtFixedRate(this::execute, 0, intervalTime, TimeUnit.MILLISECONDS);
+        for (int i = 0; i < concurrentRunTimes; i++) {
+            // 前后波动500ms
+            int step = (int) (Math.random() * 500 + 1);
+            intervalTime += step;
+            threadPoolExecutor.scheduleAtFixedRate(this::execute, step * 3L, intervalTime, TimeUnit.MILLISECONDS);
+        }
         return 0;
     }
 
@@ -116,11 +108,11 @@ public class AppLaunch implements Launch{
     }
 
     private List<AsyncTaskBase> getAsyncTaskBases(ObserverManager observerManager) {
-        LockParam lockParam = new LockParam(LOCK_KEY);
-        RedisLock redisLock = new RedisLock(lockParam);
+//        LockParam lockParam = new LockParam(LOCK_KEY);
+//        RedisLock redisLock = new RedisLock(lockParam);
         List<AsyncTaskReturn> taskList = null;
         try {
-            if (redisLock.lock()) {
+         //   if (redisLock.lock()) {
                 taskList = taskFlower.getTaskList(larkTaskClass, TaskStatus.PENDING.getStatus(), scheduleCfgDic.get(larkTaskClass.getSimpleName()).getSchedule_limit());
                 if (taskList == null || taskList.size() == 0) {
                     logger.warn("no task to deal!");
@@ -133,13 +125,13 @@ public class AppLaunch implements Launch{
                 } catch (InvocationTargetException | IllegalAccessException e) {
                     e.printStackTrace();
                 }
-            }
+       //     }
         } catch (Exception e) {
             e.printStackTrace();
         }
-        finally {
-            redisLock.unlock();
-        }
+//        finally {
+//            redisLock.unlock();
+//        }
 
         return null;
     }
@@ -154,12 +146,15 @@ public class AppLaunch implements Launch{
 
     @Override
     public int init() {
+        loadCfg();
         if (scheduleLimit != 0) {
             logger.debug("init ScheduleLimit : %d", scheduleLimit);
             concurrentRunTimes = scheduleLimit;
             MaxConcurrentRunTimes = scheduleLimit;
+        } else {
+            this.scheduleLimit = this.scheduleCfgDic.get(this.taskType).getSchedule_limit();
         }
-        loadCfg();
+
         threadPoolExecutor.scheduleAtFixedRate(this::loadCfg, cycleScheduleConfigTime, cycleScheduleConfigTime,TimeUnit.MILLISECONDS);
         return 0;
     }

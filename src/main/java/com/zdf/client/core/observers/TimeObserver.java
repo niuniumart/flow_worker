@@ -23,7 +23,7 @@ public class TimeObserver implements ObserverFunction{
     @Override
     @AnnType(observerType = AppLaunch.ObserverType.onObtain)
     public void onObtain(List<AsyncTaskBase> asyncTaskBaseList) {
-        System.out.println("改变任务状态");
+        System.out.println("改变任务为执行中。。。");
         for (AsyncTaskBase asyncTaskBase : asyncTaskBaseList) {
             setTaskNow(modifyStatus(asyncTaskBase, TaskStatus.EXECUTING));
         }
@@ -37,7 +37,7 @@ public class TimeObserver implements ObserverFunction{
     @Override
     @AnnType(observerType = AppLaunch.ObserverType.onBoot)
     public void onBoot() {
-        System.out.println(UserConfig.USERID + "的线程" + Thread.currentThread().getName() + "开始取任务并执行");
+        System.out.println(UserConfig.USERID + "的线程" + Thread.currentThread().getName() + "取任务");
     }
     @Override
     @AnnType(observerType = AppLaunch.ObserverType.onError)

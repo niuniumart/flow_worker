@@ -2,11 +2,10 @@ package com.zdf.client.rpc;
 
 import com.alibaba.fastjson.JSON;
 import com.zdf.client.constant.TaskUrl;
-import com.zdf.client.data.AsyncFlowTask;
 import com.zdf.client.data.AsyncTaskRequest;
 import com.zdf.client.data.AsyncTaskSetRequest;
 import com.zdf.client.data.ReturnStatus;
-import com.zdf.client.rpc.FlowServer;
+import com.zdf.client.data.ScheduleConfig;
 import okhttp3.*;
 
 import java.io.IOException;
@@ -90,5 +89,19 @@ public class FlowServerImpl implements FlowServer {
     public ReturnStatus getTaskTypeCfgList() {
        return get(TaskUrl.IPORT + TaskUrl.GET_CFG_LIST);
     }
+
+    @Override
+    public ReturnStatus getUserTaskList(String user_id, int statusList) {
+        Map<String, String> params = new HashMap<>();
+        params.put("user_id", user_id);
+        params.put("statusList", statusList + "");
+        return get(TaskUrl.IPORT + TaskUrl.GET_USER_TASK_LIST + getParamStr(params));
+    }
+
+    @Override
+    public ReturnStatus createTaskCFG(ScheduleConfig scheduleConfig) {
+        return post(TaskUrl.IPORT + TaskUrl.CREATE_TASK_CFG, scheduleConfig);
+    }
+
 
 }
