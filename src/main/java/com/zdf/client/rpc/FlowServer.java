@@ -10,5 +10,7 @@ public interface FlowServer {
     ReturnStatus getTask(Long taskId);
 
     ReturnStatus getTaskTypeCfgList();
+    ReturnStatus getUserTaskList(String user_id, int statusList);
+    ReturnStatus createTaskCFG(ScheduleConfig scheduleConfig);
 
 }

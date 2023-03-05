@@ -3,11 +3,13 @@ package com.zdf.client.test;
 import com.zdf.client.Client.TaskBuilder;
 import com.zdf.client.Client.TaskFlower;
 import com.zdf.client.Client.TaskFlowerImpl;
-import com.zdf.client.data.*;
+import com.zdf.client.data.AsyncFlowClientData;
+import com.zdf.client.data.AsyncTaskRequest;
+import com.zdf.client.data.AsyncTaskReturn;
+import com.zdf.client.data.AsyncTaskSetRequest;
 import com.zdf.client.enums.TaskStatus;
 import com.zdf.client.task.LarkTask;
 
-import java.lang.reflect.Method;
 import java.util.List;
 
 public class Test {
@@ -37,8 +39,12 @@ public class Test {
     }
 
     private static void testCeateTask() {
-        AsyncFlowClientData asyncFlowClientData = TaskBuilder.build(LarkTask.class,"printMsg", new String[]{"I did it!"}, new Object[0]);
+        AsyncFlowClientData asyncFlowClientData = TaskBuilder.build(LarkTask.class,"printMsg", new Object[]{"I did it!"}, new Object[0]);
         String task = taskFlower.createTask(new AsyncTaskRequest(asyncFlowClientData));
         System.out.println(task);
+    }
+
+    private static void createTaskConfig() {
+
     }
 }
